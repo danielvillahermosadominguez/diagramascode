@@ -11,48 +11,54 @@
 !include <office/Users/user.puml>
 LAYOUT_WITH_LEGEND()
 title Container context
-System_Ext(Imdb,"Imdb API","imdb.com: external API to get information")
-System_Ext(Pictures, "Google Images API", "use google lens api to get information")
-Person(NotLoggedUser, User, "Not logged user")
-Person(LoggedUser, User, "Logged user")
+System_Ext(imdb,"Imdb API","imdb.com: external API to get information")
+System_Ext(googleImages, "Google Images API", "serpapi.com: use google api to get information")
+Person(notLoggedUser, User, "Not logged user")
+Person(loggedUser, User, "Logged user")
 osa_server(gateWay, "Gate Way", "Linux - Ubuntu, Apache Tomcat , Spring Boot Gateway")
 osa_server(balancer, "Balancer", "Linux - Unbuntu, Apache")
 
-osa_server(Host3,"Host 3 - Virtual", "Linux - Ubuntu") {
-    System_Boundary(BD,"BD") {
-        ContainerDb(DataBase,"Data base", "MySQL", "We don't include replic")
+osa_server(hostDB,"Host DB - Virtual", "Linux - Ubuntu") {
+    System_Boundary(DBBoundary,"DB") {
+        ContainerDb(dataBase,"Data base", "MySQL", "We don't include replication")
+        ContainerDb(dataBaseReplication,"Data base Replication", "MySQL", "We don't include replication")
+        Rel(dataBaseReplication,dataBase,"read")
     }
 }
 
-osa_server(Host4,"Host 4 - Virtual", "Linux - Ubuntu (Scaling up - vertical: increasing memory and CPU )") {
-    System_Boundary(ServerBackEnd,"BackEnd") {
-        Container(ServiceHost1, "Backend", "Apache Tomcat,Spring boot", "Set of services without state")
-        Rel(ServiceHost1,Imdb,"https/JSON")
-        Rel(ServiceHost1,Pictures,"https/JSON")
-        Rel(ServiceHost1,BD, "JPA/SQL")
+osa_server(hostBackend,"Host Backend - Virtual", "Linux - Ubuntu (Scaling up - vertical: increasing memory and CPU )") {
+    System_Boundary(serverBackEnd,"BackEnd") {
+        Container(serviceCatalog, "Backend-Catalog-read-only", "Apache Tomcat,Spring boot", "Set of services without state")
+        Container(serviceCRUD, "Backend-CRUD", "Apache Tomcat,Spring boot", "Set of services without state")
+        Rel(serviceCatalog,imdb,"https/JSON")
+        Rel(serviceCatalog,googleImages,"https/JSON")
+        Rel(serviceCatalog,dataBaseReplication, "JPA/SQL")
+        Rel(serviceCRUD,dataBase, "JPA/SQL")
     }
 }
 
-osa_server(Host1,"Host 1 - Virtual", "Linux - Ubuntu, Apache Tomcat") {
-    System_Boundary(MoviesApp,"Movies App") {
-        Container(FrontHost1, "FrontEnd", "Angular", "Interaction of the user with the App")
+osa_server(hostFrontEndPrimary,"Host Front Primary - Virtual", "Linux - Ubuntu, Apache Tomcat") {
+    System_Boundary(moviesAppPrimary,"Movies App") {
+        Container(frontEndPrimary, "FrontEnd", "Angular", "Interaction of the user with the App")
 
-        Rel(FrontHost1, ServiceHost1, "https/JSON")
+        Rel(frontEndPrimary, serviceCatalog, "https/JSON")
+        Rel(frontEndPrimary, serviceCRUD, "https/JSON")
 
     }
 }
 
-osa_server(Host2,"Host 2 - Virtual", "Linux - Ubuntu, Apache Tomcat") {
-    System_Boundary(MoviesApp2,"Movies App") {
+osa_server(hostFrontEndSecondary,"Host Front Secondary - Virtual", "Linux - Ubuntu, Apache Tomcat") {
+    System_Boundary(MoviesAppSecondary,"Movies App") {
         Container(FrontHost2, "FrontEnd", "Angular", "Interaction of the user with the App")
-        Rel(FrontHost2, ServiceHost1, "https/JSON")
+        Rel(FrontHost2, serviceCatalog, "https/JSON")
+        Rel(frontEndPrimary, serviceCRUD, "https/JSON")
     }
 }
 
 Rel(gateWay, balancer, "https")
-Rel(balancer, Host1, "https")
-Rel(balancer, Host2, "https")
-Rel(NotLoggedUser,gateWay, "https")
-Rel(LoggedUser,gateWay, "https")
+Rel(balancer, hostFrontEndPrimary, "https")
+Rel(balancer, hostFrontEndSecondary, "https")
+Rel(notLoggedUser,gateWay, "https")
+Rel(loggedUser,gateWay, "https")
 footer %filename() this is a system which is composed of a website where users can consult information related to movies
 @enduml
