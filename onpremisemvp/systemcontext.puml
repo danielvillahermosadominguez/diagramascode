@@ -1,0 +1,30 @@
+@startuml
+!include <C4/C4_Context.puml>
+!include <office/Users/user.puml>
+LAYOUT_WITH_LEGEND()
+title System Context
+
+System_Boundary(Remote, "External dependencies") {
+   System(Imdb,"Imdb","imdb.com: external API to get information")
+   System(Pictures, "Google Images", "use google lens api to get information")
+}
+
+System_Boundary(YourSystem,"Movies Catalog System") {
+   Person(NotLoggedUser, User, "Not logged user")
+   Person(LoggedUser, User, "Logged user")
+   System(MoviesSystem, "Movies app", "Main website with access to the full catalog of movies")
+   System(Persistence, "Movies persistence", "persistence of data, including imdb and pictures")
+
+   Rel(LoggedUser, NotLoggedUser,"has more grants than")
+   Rel(LoggedUser,MoviesSystem, "Add/Update information")
+   Rel_R(MoviesSystem,NotLoggedUser, "receive information about movies")
+   Rel_R(NotLoggedUser, MoviesSystem, "Consult movies catalog")
+   Rel(MoviesSystem,Persistence, "Save and read information")
+   Rel_R(MoviesSystem,"Imdb","Read information")
+   Rel(MoviesSystem, Pictures, "Read information")
+}
+
+
+
+footer %filename() this is a system which is composed of a website where users can consult information related to movies
+@enduml

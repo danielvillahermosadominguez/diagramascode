@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Context.puml>
+!include <office/Users/user.puml>
+LAYOUT_WITH_LEGEND()
+title System Context
+!define osaPuml https://raw.githubusercontent.com/Crashedmind/PlantUML-opensecurityarchitecture2-icons/master
+!include osaPuml/Common.puml
+!include osaPuml/User/all.puml
+!include osaPuml/Hardware/all.puml
+!include osaPuml/Misc/all.puml
+!include osaPuml/Server/all.puml
+!include osaPuml/Site/all.puml
+listsprites
+footer %filename() this is a system which is composed of a website where users can consult information related to movies
+@enduml

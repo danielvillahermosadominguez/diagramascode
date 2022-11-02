@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Context.puml>
+!include <office/Users/user.puml>
+LAYOUT_WITH_LEGEND()
+title System Context
+System_Boundary(Features, "Features") {
+Person(NotLoggedUser, User, "Not logged user") {
+   rectangle "As a Not logged user I want to see the full catalog"
+   rectangle "As a Not logged user I want to wiew Detail of a Movie"
+   rectangle "As a Not logged user I want to login"
+}
+Person(LoggedUser, User, "Not logged user") {
+   rectangle "As a logged user I want to Update Information from external sources"
+   rectangle "As a logged user I want to Add a new movie"
+   rectangle "As a Logged user I want to logout"
+}
+
+
+footer %filename() this is a system which is composed of a website where users can consult information related to movies
+@enduml

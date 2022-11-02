@@ -1,0 +1,33 @@
+@startuml
+!define osaPuml https://raw.githubusercontent.com/Crashedmind/PlantUML-opensecurityarchitecture2-icons/master
+!include osaPuml/Common.puml
+!include osaPuml/User/all.puml
+!include osaPuml/Hardware/all.puml
+!include osaPuml/Misc/all.puml
+!include osaPuml/Server/all.puml
+!include osaPuml/Site/all.puml
+!include <C4/C4_Context.puml>
+!include <c4/C4_Container.puml>
+!include <office/Users/user.puml>
+LAYOUT_WITH_LEGEND()
+title Container context
+System_Ext(Imdb,"Imdb API","imdb.com: external API to get information")
+System_Ext(Pictures, "Google Images API", "use google lens api to get information")
+Person(NotLoggedUser, User, "Not logged user")
+Person(LoggedUser, User, "Logged user")
+osa_server(pc,"Host", "Linux - Ubuntu, Apache Tomcat") {
+    System_Boundary(MoviesApp,"Movies App") {
+        Container(Front, "FrontEnd", "Angular", "Interaction of the user with the App")
+        Container(Service, "Backend", "Apache Tomcat,Spring boot", "Set of services. First approach monolithic")
+        ContainerDb(DataBase,"Data base", "MySQL", "We don't include replic")
+        Rel(Front, Service, "https/JSON")
+        Rel(Service,DataBase,"JPA/SQL")
+        Rel(Service,Imdb,"https/JSON")
+        Rel(Service,Pictures,"https/JSON")
+    }
+}
+
+Rel_L(NotLoggedUser,Front, "https")
+Rel_U(LoggedUser,Front, "https")
+footer %filename() this is a system which is composed of a website where users can consult information related to movies
+@enduml

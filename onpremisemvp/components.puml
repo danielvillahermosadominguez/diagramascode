@@ -1,0 +1,51 @@
+@startuml
+!define osaPuml https://raw.githubusercontent.com/Crashedmind/PlantUML-opensecurityarchitecture2-icons/master
+!include osaPuml/Common.puml
+!include osaPuml/User/all.puml
+!include osaPuml/Hardware/all.puml
+!include osaPuml/Misc/all.puml
+!include osaPuml/Server/all.puml
+!include osaPuml/Site/all.puml
+!include <C4/C4_Context.puml>
+!include <c4/C4_Container.puml>
+!include <c4/C4_Component.puml>
+!include <office/Users/user.puml>
+LAYOUT_WITH_LEGEND()
+title Component context
+System_Ext(Imdb,"Imdb API","imdb.com: external API to get information")
+System_Ext(Pictures, "Google Images API", "use google lens api to get information")
+Person(NotLoggedUser, User, "Not logged user")
+Person(LoggedUser, User, "Logged user")
+
+System_Boundary(MoviesApp,"Movies App") {
+    System_Boundary(Front, "FrontEnd") {
+        Component(Login,"Login","The user could login")
+        Component(MoviesCatalog, "Movies Catalog", "As a Not logged user I want to see the full catalog")
+        Component(MoviesCRUD, "Movies CRUD", "As a Not logged user I want to create, read, update and delete movies")
+    }
+    System_Boundary(Service, "Backend") {
+        Component(LoginService, "Login Service", "The user could login")
+        Component(MoviesCatalogService, "Movies Catalog Service", "As a Not logged user I want to see the full catalog")
+        Component(IMDBClient, "IMDB Client", "A wrapper which consult the IMDB external API")
+        Component(GoogleImagesClient, "Google Images Cliente", "A wrapper which consult the Google Images external API")
+    }
+
+    ContainerDb(DataBase,"Data base", "MySQL", "We don't include replic")
+    Rel(NotLoggedUser, Login, "Log-in")
+    Rel(NotLoggedUser, MoviesCatalog, "Consult")
+    Rel(LoggedUser, Login, "Log-out")
+    Rel(LoggedUser, MoviesCRUD, "use")
+    Rel(MoviesCatalog, MoviesCatalogService, "use")
+    Rel(Login, LoginService, "use")
+    Rel(MoviesCRUD, MoviesCatalogService, "")
+    Rel(Front, Service, "https/JSON")
+    Rel(LoginService,DataBase,"JPA/SQL")
+    Rel(MoviesCatalogService,DataBase,"JPA/SQL")
+    Rel(IMDBClient,Imdb,"https/JSON")
+    Rel(GoogleImagesClient,Pictures,"https/JSON")
+    Rel(MoviesCatalogService, IMDBClient, "consult")
+    Rel(MoviesCatalogService, GoogleImagesClient, "consult")
+}
+
+footer %filename() this is a system which is composed of a website where users can consult information related to movies
+@enduml
