@@ -42,9 +42,11 @@ It should be neccesary to detect certain technical features you will need in ord
 
 
 SOLUTION in the folder: increasing users:
-* systemcontext.puml
-* features.puml
 * containers.puml
+
+- approach on-premise
+- Using a Gateway to access 
+- Using a Load Balancer with two Host. Balancer of traffic
 
 
 3. Migrating to the cloud.
