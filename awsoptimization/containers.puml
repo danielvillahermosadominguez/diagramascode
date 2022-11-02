@@ -1,0 +1,78 @@
+@startuml
+!define osaPuml https://raw.githubusercontent.com/Crashedmind/PlantUML-opensecurityarchitecture2-icons/master
+!include osaPuml/Common.puml
+!include osaPuml/User/all.puml
+!include osaPuml/Hardware/all.puml
+!include osaPuml/Misc/all.puml
+!include osaPuml/Server/all.puml
+!include osaPuml/Site/all.puml
+!include <C4/C4_Context.puml>
+!include <c4/C4_Container.puml>
+!include <office/Users/user.puml>
+!include <awslib/AWSCommon>
+!include <awslib/Compute/all.puml>
+!include <awslib/general/all.puml>
+!include <awslib/NetworkingAndContentDelivery/all.puml>
+!include <awslib/Database/all.puml>
+!include <awslib/GroupIcons/all.puml>
+
+LAYOUT_WITH_LEGEND()
+title Container context
+System_Ext(imdb,"Imdb API","imdb.com: external API to get information")
+System_Ext(googleImages, "Google Images API", "serpapi.com: use google api to get information")
+Users(notLoggedUser, User, "Not logged user")
+User(loggedUser, User, "Logged user")
+APIGateway2(gateWay, "Gate Way", "AWS")
+ClassicLoadBalancer(balancer, "Balancer", "AWS")
+
+
+EC2(hostDB,"Host DB - Virtual", "Linux - Ubuntu") {
+    System_Boundary(DBBoundary,"DB") {
+        ElastiCache(cache,"Elastic Cache - Redis","")
+        Aurora(dataBase,"Data base", "Aurora - MySQL", "Changing MySQL to Aurora, increase the performance")
+        Aurora(dataBaseReplication,"Data base Replication", "Aurora - MySQL", "Changing MySQL to Aurora, increase the performance")
+        Rel(dataBaseReplication,dataBase,"read")
+        Rel(cache, dataBaseReplication, "read")
+    }
+}
+
+EC2(hostBackend,"Host Backend - Virtual", "Linux - Ubuntu (Scaling up - vertical: increasing memory and CPU )") {
+    System_Boundary(serverBackEnd,"BackEnd") {
+        Container(serviceCatalog, "Backend-Catalog-read-only", "Apache Tomcat,Spring boot", "Set of services without state")
+        Container(serviceCRUD, "Backend-CRUD", "Apache Tomcat,Spring boot", "Set of services without state")
+        Rel(serviceCatalog,imdb,"https/JSON")
+        Rel(serviceCatalog,googleImages,"https/JSON")
+        Rel(serviceCatalog,dataBaseReplication, "JPA/SQL")
+        Rel(serviceCatalog,cache, "key/value")
+        Rel(serviceCRUD,dataBase, "JPA/SQL")
+    }
+}
+
+AutoScalingGroup(autoScaling, "AutoScaling", "2-10") {
+    EC2(hostFrontEndPrimary,"Host Front Primary - Virtual", "Linux - Ubuntu, Apache Tomcat") {
+        System_Boundary(moviesAppPrimary,"Movies App") {
+            Container(frontEndPrimary, "FrontEnd", "Angular", "Interaction of the user with the App")
+
+            Rel(frontEndPrimary, serviceCatalog, "https/JSON")
+            Rel(frontEndPrimary, serviceCRUD, "https/JSON")
+
+        }
+    }
+    EC2(hostFrontEndSecondary,"Host Front Secondary - Virtual", "Linux - Ubuntu, Apache Tomcat") {
+        System_Boundary(MoviesAppSecondary,"Movies App") {
+            Container(FrontHost2, "FrontEnd", "Angular", "Interaction of the user with the App")
+            Rel(FrontHost2, serviceCatalog, "https/JSON")
+            Rel(frontEndPrimary, serviceCRUD, "https/JSON")
+        }
+    }
+}
+
+
+
+Rel(gateWay, balancer, "https")
+Rel(balancer, hostFrontEndPrimary, "https")
+Rel(balancer, hostFrontEndSecondary, "https")
+Rel(notLoggedUser,gateWay, "https")
+Rel(loggedUser,gateWay, "https")
+footer %filename() this is a system which is composed of a website where users can consult information related to movies
+@enduml
