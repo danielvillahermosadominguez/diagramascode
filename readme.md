@@ -1,5 +1,3 @@
-
-
 # Preparing your IDE
 You can find a way to configure your IDE to use PlantUML:
 
@@ -8,9 +6,10 @@ https://github.com/esteinberg/plantuml4idea#plantuml4idea
 https://plantuml.com/es/
 https://crashedmind.github.io/PlantUMLHitchhikersGuide/
 
-#C4 model
+# C4 model
 https://mattjhayes.com/2020/05/10/diagrams-with-c4-model/
-
+# AWS symbols
+https://github.com/awslabs/aws-icons-for-plantuml/blob/master/AWSSymbols.md
 
 # The Kata
 
@@ -51,7 +50,22 @@ SOLUTION in the folder: increasing users:
 
 3. Migrating to the cloud.
 
-4. Optimizing for the cloud.
+We want to migrate to the cloud (AWS), so we will need to do the changes to make a easy migration in order to save money.
+
+SOLUTION:
+* Change the server with the Gateway with Amazon Gateway
+* Change the balancer with AWS balancer
+* Change the virtual hosts with EC2 instances
+
+Some easy improvements you could valorate it:
+
+* Use a Elastik EC2 between 2-10 instances
+* Improve the reading of the Secondary DB with a AWS - Elastik Cache - Redis - You need a change in your code (You need to valorate this change)
+* Change MySQL to Aurora - MySQL (better speed and consistency)
+
+
+5. Optimizing for the cloud.
+
 
 # Explaination
 
