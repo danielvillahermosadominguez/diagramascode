@@ -15,6 +15,7 @@
 !include <awslib/NetworkingAndContentDelivery/all.puml>
 !include <awslib/Database/all.puml>
 !include <awslib/GroupIcons/all.puml>
+!include <awslib/Compute/ElasticKubernetesService.puml>
 
 LAYOUT_WITH_LEGEND()
 title Container context
@@ -24,7 +25,9 @@ Users(notLoggedUser, User, "Not logged user")
 User(loggedUser, User, "Logged user")
 APIGateway2(gateWay, "Gate Way", "AWS")
 ClassicLoadBalancer(balancer, "Balancer", "AWS")
+ClassicLoadBalancer(backendBalancer, "Backend Balancer", "AWS")
 
+ElasticKubernetesService(eks, "EKS Control Plane", "")
 
 EC2(hostDB,"Host DB - Virtual", "Linux - Ubuntu") {
     System_Boundary(DBBoundary,"DB") {
@@ -36,8 +39,8 @@ EC2(hostDB,"Host DB - Virtual", "Linux - Ubuntu") {
     }
 }
 
-EC2(hostBackend,"Host Backend - Virtual", "Linux - Ubuntu (Scaling up - vertical: increasing memory and CPU )") {
-    System_Boundary(serverBackEnd,"BackEnd") {
+AutoScalingGroup(autoScalingBackend, "AutoScaling", "1-10") {
+    EC2(hostBackend,"Host Backend - Virtual", "Linux - Ubuntu/Docker") {
         Container(serviceCatalog, "Backend-Catalog-read-only", "Apache Tomcat,Spring boot", "Set of services without state")
         Container(serviceCRUD, "Backend-CRUD", "Apache Tomcat,Spring boot", "Set of services without state")
         Rel(serviceCatalog,imdb,"https/JSON")
@@ -45,33 +48,24 @@ EC2(hostBackend,"Host Backend - Virtual", "Linux - Ubuntu (Scaling up - vertical
         Rel(serviceCatalog,dataBaseReplication, "JPA/SQL")
         Rel(serviceCatalog,cache, "key/value")
         Rel(serviceCRUD,dataBase, "JPA/SQL")
+        Rel(backendBalancer,autoScalingBackend,"https")
+        }
+}
+
+AutoScalingGroup(autoScalingFrontEnd, "AutoScaling", "1-10") {
+    EC2(hostFrontEndPrimary,"Host Front 1 - Virtual", "Linux - docker") {
+        Container(frontEndPrimary, "FrontEnd", "Angular/nodejs/Apache Tomcat", "Interaction of the user with the App")
+        Rel(frontEndPrimary, backendBalancer, "https/JSON")
+        Rel(frontEndPrimary, backendBalancer, "https/JSON")
     }
 }
 
-AutoScalingGroup(autoScaling, "AutoScaling", "2-10") {
-    EC2(hostFrontEndPrimary,"Host Front Primary - Virtual", "Linux - Ubuntu, Apache Tomcat") {
-        System_Boundary(moviesAppPrimary,"Movies App") {
-            Container(frontEndPrimary, "FrontEnd", "Angular", "Interaction of the user with the App")
-
-            Rel(frontEndPrimary, serviceCatalog, "https/JSON")
-            Rel(frontEndPrimary, serviceCRUD, "https/JSON")
-
-        }
-    }
-    EC2(hostFrontEndSecondary,"Host Front Secondary - Virtual", "Linux - Ubuntu, Apache Tomcat") {
-        System_Boundary(MoviesAppSecondary,"Movies App") {
-            Container(FrontHost2, "FrontEnd", "Angular", "Interaction of the user with the App")
-            Rel(FrontHost2, serviceCatalog, "https/JSON")
-            Rel(frontEndPrimary, serviceCRUD, "https/JSON")
-        }
-    }
-}
-
-
+Rel_R(eks, autoScalingBackend, "")
+Rel_R(eks, autoScalingFrontEnd, "")
 
 Rel(gateWay, balancer, "https")
-Rel(balancer, hostFrontEndPrimary, "https")
-Rel(balancer, hostFrontEndSecondary, "https")
+Rel(balancer, autoScalingFrontEnd, "https")
+
 Rel(notLoggedUser,gateWay, "https")
 Rel(loggedUser,gateWay, "https")
 footer %filename() this is a system which is composed of a website where users can consult information related to movies

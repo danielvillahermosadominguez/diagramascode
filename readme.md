@@ -96,12 +96,46 @@ We want to optimize for the cloud and include monitoring. What kind of changes c
 
 ```
 A possible solution in the folder awsoptimization:
+- Backend scaling with a balancer and EC2 machines
 - Instead of scaling with virtual machine, scaling with docker and kubernetes: 
   - Front - Pod
   - Catalog service - Pod
   - CRUD service - Pod (this service could need a change in the code)
+  - We could based on this picture: https://aws.amazon.com/es/getting-started/hands-on/deploy-kubernetes-app-amazon-eks/
 - We only need a set of EC2 with Docker and kubernetes
+
+
 We would need to evaluate this change:
-- We could change the database with DynamoDB because, really we need relations in the DB? we could need some refactoring in the services
-- We could include DynamoDB accelerator
+- We could change the database with DynamoDB because, really we need relations in the DB? we could need some refactoring in the services: In our case
+  we need to compare and think we could implement in the future a feature for filtering movies:
+    * Backups: DynamoDB provides constants backups and the user can restore the database table to any point in time. On the other hand RDS you can enable
+      automatic backup for your database instance. The user-initiated backups are stored as database snapshopts in S3 until you delete it. So, I don't find
+      any motive to use DynamoDB in this point.
+    * Scalability: Amazon DynamoDB is highly scalable but RDS is also scalable and support auto-scaling. So, I don't see a motive here.
+    * Performance: DynamoDB is known for high-performance. There is less latency and response time when reading and writing data because the IO is SSD. In
+                   addition, the in-memory cache of DynamoDB Acceleator (DAX) cand enhance the read performance. So this could a motive to remove a RDIS cache
+                   and the replication of DB and use just DynamoDB.
+                   On the other hand, RDS is running en SSD too.
+                   RDS has a high-performance too and is a solution for OLTP (online transaction processing). This could be a motive to use RDS because we will
+                   have concurrency and atomicity. multiple user could alterate the same data. However, Amazon DynamoDB works with transactions too.
+    * Availability and Durability: DynamoDB is replicated across three availabiltiy zones automatically. RDS uses Multi-AZ deployments to enhance the availability.
+                   This has an additional cost because we will need multiple instances.
+    * Security: DynamoDB integrates well with IAM and RDS too. The encryption with KMS (Key Management Service) ensure the DynamoDB security. Amazon RDS also
+                includes AWS KMS. User can use SSL to enhance the security of data.
+                
+    The recommended uses cases for DynamoDB:
+        * Real-time bidding
+        * Shopping carts
+        * Mobile applications
+        * Content management
+        * High I/O needs
+        * Unstructured data in gamming applications.
+    Uses cases for Amazon RDS:
+        * Any relational backend database
+        * Traditional applications
+        * Enterprise-grade applications
+        * CRM and e-commerce solutions.
+        * Data warehouses
+    So, in this case, it is better use RDS - Aurora with replication. But if we include in the future a mobile client to improve the experience for the user,
+    we will need to evaluate again this part of the architecture.                
 ```
